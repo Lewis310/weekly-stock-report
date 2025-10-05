@@ -20,12 +20,16 @@ for ticker in TICKERS:
     data[ticker] = df
 
 # -------------------------
-# 2️⃣ Prepare AI prompt with last 7 closing prices
+# 2️⃣ Prepare AI prompt
 # -------------------------
+# Option 1: Use recent closing prices as context
 market_summary = ""
 for ticker, df in data.items():
-    closes = df['Close'].tail(7).tolist()  # last 7 closing prices as floats
-    market_summary += f"{ticker} last 7 closing prices: {closes}\n"
+    closes = df['Close'].tail(7).tolist()
+    market_summary += f"{ticker} recent closing prices: {closes}\n"
+
+# Option 2 (simpler, purely general): just prompt AI to write a weekly summary
+# market_summary = "Write a weekly summary of the US stock market, including S&P 500, Dow Jones, and NASDAQ."
 
 # -------------------------
 # 3️⃣ Generate AI Analysis
@@ -34,10 +38,10 @@ openai.api_key = os.environ.get("OPENAI_API_KEY")
 
 def generate_ai_summary(summary_text):
     prompt = f"""
-    You are a professional financial analyst. Using the following market summary:
+    You are a professional financial analyst. Using the following information:
     {summary_text}
     Write a 3-4 paragraph weekly US stock market report suitable for an email.
-    Include insights, trends, and key points for investors.
+    Include general insights, trends, and key points for investors.
     """
     response = openai.ChatCompletion.create(
         model="gpt-5-mini",
