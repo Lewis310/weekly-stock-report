@@ -2,7 +2,7 @@ import os
 from datetime import date
 import yfinance as yf
 import matplotlib.pyplot as plt
-import openai
+from openai import OpenAI
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
@@ -24,15 +24,15 @@ for ticker in TICKERS:
 market_summary = ""
 for ticker, df in data.items():
     closes = df['Close']
-    if isinstance(closes, type(df)):  # If df['Close'] is a DataFrame, not Series
+    if isinstance(closes, type(df)):  # If df['Close'] is a DataFrame
         closes = closes.iloc[:, 0]  # Take the first column
     closes = closes.tail(7).tolist()
     market_summary += f"{ticker} recent closing prices: {closes}\n"
 
 # -------------------------
-# 3️⃣ Generate AI Analysis
+# 3️⃣ Generate AI Analysis (new OpenAI API)
 # -------------------------
-openai.api_key = os.environ.get("OPENAI_API_KEY")
+client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
 def generate_ai_summary(summary_text):
     prompt = f"""
@@ -41,13 +41,13 @@ def generate_ai_summary(summary_text):
     Write a 3-4 paragraph weekly US stock market report suitable for an email.
     Include general insights, trends, and key points for investors.
     """
-    response = openai.ChatCompletion.create(
+    response = client.chat.completions.create(
         model="gpt-5-mini",
         messages=[{"role": "user", "content": prompt}],
         temperature=0.7,
         max_tokens=600
     )
-    return response['choices'][0]['message']['content']
+    return response.choices[0].message.content
 
 ai_paragraph = generate_ai_summary(market_summary)
 
@@ -56,7 +56,8 @@ ai_paragraph = generate_ai_summary(market_summary)
 # -------------------------
 plt.figure(figsize=(10,5))
 for ticker, df in data.items():
-    plt.plot(df['Date'], df['Close'].iloc[:, 0] if isinstance(df['Close'], type(df)) else df['Close'], label=ticker)
+    closes = df['Close'].iloc[:, 0] if isinstance(df['Close'], type(df)) else df['Close']
+    plt.plot(df['Date'], closes, label=ticker)
 plt.title("Weekly US Market Index Movement")
 plt.xlabel("Date")
 plt.ylabel("Closing Price")
