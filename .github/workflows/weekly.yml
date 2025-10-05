@@ -1,0 +1,31 @@
+name: Weekly Stock Report
+
+on:
+  schedule:
+    # Tuesday 6:30am AEST = Monday 19:30 UTC
+    - cron: '30 19 * * 1'
+  workflow_dispatch:  # allows manual runs from the Actions tab
+
+jobs:
+  run-report:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run weekly report
+        env:
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          EMAIL_TO: ${{ secrets.EMAIL_TO }}
+          FROM_NAME: ${{ secrets.FROM_NAME }}
+        run: python weekly_stock_report.py
