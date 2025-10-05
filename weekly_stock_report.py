@@ -9,10 +9,73 @@ from email.mime.image import MIMEImage
 import os
 from datetime import datetime, timedelta
 import io
-import requests
+import sys
+
+def debug_openai_setup():
+    """Debug function to test OpenAI setup"""
+    print("🔍 DEBUG: Starting OpenAI setup check...")
+    
+    # Check if API key exists
+    api_key = os.getenv('OPENAI_API_KEY')
+    if not api_key:
+        print("❌ DEBUG: OPENAI_API_KEY is empty or not found")
+        return False
+    
+    print(f"✅ DEBUG: API Key found: {api_key[:8]}...{api_key[-4:]}")
+    
+    # Check OpenAI library version
+    try:
+        import openai
+        print(f"✅ DEBUG: OpenAI version: {openai.__version__}")
+    except Exception as e:
+        print(f"❌ DEBUG: Error importing OpenAI: {e}")
+        return False
+    
+    return True
+
+def test_openai_api():
+    """Test OpenAI API directly"""
+    print("🔍 DEBUG: Testing OpenAI API call...")
+    
+    api_key = os.getenv('OPENAI_API_KEY')
+    if not api_key:
+        return "❌ No API key found"
+    
+    try:
+        # Try with newer OpenAI client (v1.0+)
+        try:
+            from openai import OpenAI
+            client = OpenAI(api_key=api_key)
+            
+            response = client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=[{"role": "user", "content": "Say 'Hello World'"}],
+                max_tokens=10
+            )
+            result = response.choices[0].message.content
+            print("✅ DEBUG: OpenAI API test successful (new client)")
+            return f"API Test Result: {result}"
+            
+        except ImportError:
+            # Fallback to old client
+            openai.api_key = api_key
+            response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
+                messages=[{"role": "user", "content": "Say 'Hello World'"}],
+                max_tokens=10
+            )
+            result = response.choices[0].message.content
+            print("✅ DEBUG: OpenAI API test successful (old client)")
+            return f"API Test Result: {result}"
+            
+    except Exception as e:
+        error_msg = f"❌ DEBUG: OpenAI API test failed: {str(e)}"
+        print(error_msg)
+        return error_msg
 
 def get_stock_data():
     """Fetch major US stock indices data"""
+    print("📊 Fetching stock data...")
     tickers = {
         'SPY': 'S&P 500',
         'QQQ': 'NASDAQ 100', 
@@ -51,6 +114,7 @@ def get_stock_data():
 
 def create_stock_chart(stock_data):
     """Create a visualization of stock performance"""
+    print("📈 Creating market chart...")
     plt.style.use('seaborn-v0_8')
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
     
@@ -95,15 +159,21 @@ def create_stock_chart(stock_data):
     return img_bytes
 
 def generate_ai_analysis(stock_data):
-    """Generate AI analysis using OpenAI with better error handling"""
+    """Generate AI analysis using OpenAI"""
+    print("🤖 Starting AI analysis generation...")
+    
+    # Debug setup first
+    if not debug_openai_setup():
+        return "❌ OpenAI setup failed - check debug output"
+    
+    # Test API call
+    test_result = test_openai_api()
+    print(f"🔍 DEBUG: API Test Result: {test_result}")
+    
+    if "failed" in test_result.lower() or "error" in test_result.lower():
+        return f"❌ API test failed. Using fallback analysis. Debug: {test_result}"
+    
     openai_api_key = os.getenv('OPENAI_API_KEY')
-    
-    if not openai_api_key:
-        error_msg = "❌ OPENAI_API_KEY not found in environment variables"
-        print(error_msg)
-        return error_msg
-    
-    print(f"🔑 OpenAI API Key found: {openai_api_key[:8]}...")  # Print first 8 chars for verification
     
     # Create prompt with stock data
     stock_summary = "\n".join([
@@ -125,12 +195,15 @@ def generate_ai_analysis(stock_data):
     Keep it professional, data-driven, and avoid hype. Use clear, concise language suitable for a morning email report.
     """
     
+    print("🔍 DEBUG: Sending request to OpenAI...")
+    
     try:
-        # Method 1: Try with newer OpenAI client (if using openai>=1.0.0)
+        # Try with newer OpenAI client first
         try:
             from openai import OpenAI
             client = OpenAI(api_key=openai_api_key)
             
+            print("🔍 DEBUG: Using new OpenAI client...")
             response = client.chat.completions.create(
                 model="gpt-3.5-turbo",
                 messages=[
@@ -141,11 +214,12 @@ def generate_ai_analysis(stock_data):
                 temperature=0.7
             )
             analysis = response.choices[0].message.content.strip()
-            print("✅ AI analysis generated successfully (new client)")
+            print("✅ AI analysis generated successfully with new client")
             return analysis
             
         except ImportError:
-            # Method 2: Fallback to older OpenAI client (openai<1.0.0)
+            # Fallback to older OpenAI client
+            print("🔍 DEBUG: Using old OpenAI client...")
             openai.api_key = openai_api_key
             
             response = openai.ChatCompletion.create(
@@ -158,15 +232,12 @@ def generate_ai_analysis(stock_data):
                 temperature=0.7
             )
             analysis = response.choices[0].message.content.strip()
-            print("✅ AI analysis generated successfully (old client)")
+            print("✅ AI analysis generated successfully with old client")
             return analysis
             
     except Exception as e:
         error_msg = f"❌ OpenAI API Error: {str(e)}"
-        print(error_msg)
-        print("🔧 Using fallback analysis...")
-        
-        # Fallback analysis based on stock data
+        print(f"🔍 DEBUG: Full error: {repr(e)}")
         return generate_fallback_analysis(stock_data)
 
 def generate_fallback_analysis(stock_data):
@@ -333,6 +404,7 @@ def send_email(html_content, chart_image, to_email, from_name):
 def main():
     """Main function to generate and send the market report"""
     print("🚀 Generating Morning Market Report...")
+    print(f"🔍 Python version: {sys.version}")
     
     # Validate environment variables
     required_vars = ['EMAIL_TO', 'FROM_NAME', 'OPENAI_API_KEY', 'SMTP_USER', 'SMTP_PASSWORD']
@@ -346,7 +418,6 @@ def main():
     print("✅ All environment variables found!")
     
     # Fetch stock data
-    print("📊 Fetching stock data...")
     stock_data = get_stock_data()
     
     if not stock_data:
@@ -354,20 +425,16 @@ def main():
         return
     
     # Create visualization
-    print("📈 Creating market chart...")
     chart_image = create_stock_chart(stock_data)
     
     # Generate AI analysis
-    print("🤖 Generating AI analysis...")
     ai_analysis = generate_ai_analysis(stock_data)
     
     # Create email content
-    print("✍️ Creating email content...")
     from_name = os.getenv('FROM_NAME', 'Market AI Reporter')
     html_content = create_email_html(stock_data, ai_analysis, from_name)
     
     # Send email
-    print("📧 Sending email...")
     email_to = os.getenv('EMAIL_TO')
     success = send_email(html_content, chart_image, email_to, from_name)
     
