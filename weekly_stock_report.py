@@ -19,7 +19,7 @@ for ticker in TICKERS:
     df.reset_index(inplace=True)
     data[ticker] = df
 
-# Simple summary for AI
+# Create simple summary for AI
 market_summary = ""
 for ticker, df in data.items():
     start_price = df['Close'].iloc[0]
@@ -70,17 +70,32 @@ plt.savefig(graph_path, bbox_inches="tight")
 plt.close()
 
 # -------------------------
-# 4️⃣ Create HTML email
+# 4️⃣ Save Markdown report
+# -------------------------
+md_path = f"reports/{today}-report.md"
+with open(md_path, "w", encoding="utf-8") as f:
+    f.write(f"# Weekly US Market Report ({today})\n\n")
+    f.write(f"{ai_paragraph}\n\n")
+    f.write(f"![Market Graph](./{today}-market.png)\n")
+
+print(f"Markdown report saved at: {md_path}")
+
+# -------------------------
+# 5️⃣ Create HTML email
 # -------------------------
 html_body = f"""
-<h2>Weekly US Market Report</h2>
-<p>{ai_paragraph}</p>
-<img src="cid:market_graph" alt="Market Graph" style="width:600px;">
-<p style="font-size:12px;color:gray;">Generated automatically by your Weekly Market Bot.</p>
+<div style="font-family:Arial, sans-serif; line-height:1.5; color:#333;">
+    <h1 style="color:#1a73e8;">Weekly US Market Report</h1>
+    <p style="font-size:14px;">{ai_paragraph}</p>
+    <div style="text-align:center; margin:20px 0;">
+        <img src="cid:market_graph" alt="Market Graph" style="width:600px; border:1px solid #ccc; padding:5px; border-radius:8px;">
+    </div>
+    <p style="font-size:12px; color:#777;">Generated automatically by your Weekly Market Bot.</p>
+</div>
 """
 
 # -------------------------
-# 5️⃣ Send Email
+# 6️⃣ Send Email
 # -------------------------
 msg = MIMEMultipart()
 msg['From'] = f"{os.environ.get('FROM_NAME')} <{os.environ.get('SMTP_USER')}>"
@@ -101,4 +116,3 @@ with smtplib.SMTP('smtp.gmail.com', 587) as server:
     server.send_message(msg)
 
 print(f"Email sent to: {os.environ.get('EMAIL_TO')}")
-print(f"Graph saved at: {graph_path}")
