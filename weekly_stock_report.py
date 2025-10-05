@@ -22,8 +22,8 @@ for ticker in TICKERS:
 # Create simple summary for AI
 market_summary = ""
 for ticker, df in data.items():
-    start_price = float(df['Close'].iloc[0])   # Force single float
-    end_price = float(df['Close'].iloc[-1])    # Force single float
+    start_price = float(df.at[0, 'Close'])          # first row scalar
+    end_price = float(df.at[len(df)-1, 'Close'])   # last row scalar
     change = end_price - start_price
     pct_change = (change / start_price) * 100
     market_summary += f"{ticker}: {start_price:.2f} -> {end_price:.2f} ({pct_change:.2f}%)\n"
