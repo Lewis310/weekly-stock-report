@@ -1,7 +1,6 @@
 import os
 from datetime import date
 import yfinance as yf
-import pandas as pd
 import matplotlib.pyplot as plt
 import openai
 from email.mime.multipart import MIMEMultipart
@@ -22,14 +21,11 @@ for ticker in TICKERS:
 # -------------------------
 # 2️⃣ Prepare AI prompt
 # -------------------------
-# Option 1: Use recent closing prices as context
+# You can use recent closing prices or just a general prompt
 market_summary = ""
 for ticker, df in data.items():
     closes = df['Close'].tail(7).tolist()
     market_summary += f"{ticker} recent closing prices: {closes}\n"
-
-# Option 2 (simpler, purely general): just prompt AI to write a weekly summary
-# market_summary = "Write a weekly summary of the US stock market, including S&P 500, Dow Jones, and NASDAQ."
 
 # -------------------------
 # 3️⃣ Generate AI Analysis
