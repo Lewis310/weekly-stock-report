@@ -312,7 +312,7 @@ The market shows {sentiment} characteristics with {industry_news[0]['industry']}
     return analysis
 
 def create_email_html(stock_data, ai_analysis, political_news, industry_news, from_name):
-    """Create visually appealing HTML email with clean organization"""
+    """Create visually appealing HTML email with consistent styling"""
     
     current_date = datetime.now().strftime("%A, %B %d, %Y")
     
@@ -341,14 +341,14 @@ def create_email_html(stock_data, ai_analysis, political_news, industry_news, fr
         </tr>
         """
     
-    # Create political news section
+    # Create political news section with consistent styling
     political_html = ""
     for news in political_news:
         urgency_color = "#dc3545" if news['urgency'] == 'High' else "#ffc107" if news['urgency'] == 'Medium' else "#28a745"
         political_html += f"""
         <div style="margin: 12px 0; padding: 15px; background: white; border-radius: 8px; border-left: 4px solid {urgency_color}; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-            <div style="font-weight: bold; margin-bottom: 8px; color: #2c3e50;">{news['headline']}</div>
-            <div style="color: #666; font-size: 14px; margin-bottom: 8px;">{news['impact']}</div>
+            <div style="font-weight: bold; margin-bottom: 8px; color: #2c3e50; font-size: 15px;">{news['headline']}</div>
+            <div style="color: #666; font-size: 14px; margin-bottom: 8px; line-height: 1.4;">{news['impact']}</div>
             <div style="font-size: 13px; color: #7f8c8d;">
                 <span style="background: #f8f9fa; padding: 4px 8px; border-radius: 4px; margin-right: 8px;">
                     🎯 {', '.join(news['sectors_affected'])}
@@ -366,10 +366,10 @@ def create_email_html(stock_data, ai_analysis, political_news, industry_news, fr
         sentiment_color = "#28a745" if news['sentiment'] == 'Positive' else "#dc3545" if news['sentiment'] == 'Negative' else "#6c757d"
         industry_html += f"""
         <div style="margin: 12px 0; padding: 15px; background: white; border-radius: 8px; border-left: 4px solid {sentiment_color}; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-            <div style="font-weight: bold; margin-bottom: 8px; color: #2c3e50;">
+            <div style="font-weight: bold; margin-bottom: 8px; color: #2c3e50; font-size: 15px;">
                 🏭 {news['industry']}: {news['headline'].replace(f"{news['industry']} Update: ", "")}
             </div>
-            <div style="color: #666; font-size: 14px; margin-bottom: 8px;">{news['impact']}</div>
+            <div style="color: #666; font-size: 14px; margin-bottom: 8px; line-height: 1.4;">{news['impact']}</div>
             <div style="font-size: 13px; color: #7f8c8d;">
                 <span style="background: #f8f9fa; padding: 4px 8px; border-radius: 4px; margin-right: 8px;">
                     📊 {', '.join(news['stocks_to_watch'])}
@@ -381,17 +381,33 @@ def create_email_html(stock_data, ai_analysis, political_news, industry_news, fr
         </div>
         """
     
-    # Convert analysis to clean HTML
-    analysis_html = ai_analysis.replace('## ', '<h3 style="color: #2c3e50; border-bottom: 2px solid #667eea; padding-bottom: 5px; margin-top: 20px;">') \
-                              .replace('**', '<strong>') \
-                              .replace('**', '</strong>') \
-                              .replace('\n\n', '</p><p style="margin: 10px 0; line-height: 1.6;">') \
-                              .replace('\n', '<br>') \
-                              .replace('<h3 style="color: #2c3e50; border-bottom: 2px solid #667eea; padding-bottom: 5px; margin-top: 20px;">', '</p><h3 style="color: #2c3e50; border-bottom: 2px solid #667eea; padding-bottom: 5px; margin-top: 20px;">') \
-                              .replace('### ', '<h4 style="color: #34495e; margin: 15px 0 10px 0;">') \
-                              .replace('<h4 style="color: #34495e; margin: 15px 0 10px 0;">', '</p><h4 style="color: #34495e; margin: 15px 0 10px 0;">')
+    # Convert analysis to clean HTML with consistent styling
+    analysis_lines = ai_analysis.split('\n')
+    analysis_html = ""
     
-    analysis_html = f'<p style="margin: 10px 0; line-height: 1.6;">{analysis_html}</p>'
+    for line in analysis_lines:
+        if line.startswith('**MARKET INTELLIGENCE SUMMARY**'):
+            analysis_html += f'<div style="font-weight: bold; font-size: 16px; color: #2c3e50; margin-bottom: 8px;">{line.replace("**", "")}</div>'
+        elif line.startswith('*Generated'):
+            analysis_html += f'<div style="color: #6c757d; font-size: 13px; margin-bottom: 20px; font-style: italic;">{line}</div>'
+        elif line.startswith('## '):
+            analysis_html += f'<div style="font-weight: bold; font-size: 16px; color: #2c3e50; margin: 20px 0 12px 0; padding-bottom: 6px; border-bottom: 2px solid #667eea;">{line.replace("## ", "")}</div>'
+        elif line.startswith('### '):
+            analysis_html += f'<div style="font-weight: 600; font-size: 15px; color: #34495e; margin: 16px 0 10px 0;">{line.replace("### ", "")}</div>'
+        elif line.startswith('- **') or line.startswith('**') and ':**' in line:
+            # Handle bullet points and key-value lines
+            clean_line = line.replace('**', '').replace('- ', '')
+            if ':' in clean_line:
+                parts = clean_line.split(':', 1)
+                analysis_html += f'<div style="margin: 8px 0; line-height: 1.4;"><strong>{parts[0]}:</strong>{parts[1]}</div>'
+            else:
+                analysis_html += f'<div style="margin: 8px 0; line-height: 1.4;">• {clean_line}</div>'
+        elif line.startswith('1. ') or line.startswith('2. ') or line.startswith('3. ') or line.startswith('4. '):
+            analysis_html += f'<div style="margin: 8px 0 8px 15px; line-height: 1.4;">{line}</div>'
+        elif line.strip() == '':
+            analysis_html += '<div style="margin: 4px 0;"></div>'
+        else:
+            analysis_html += f'<div style="margin: 8px 0; line-height: 1.4; color: #666; font-size: 14px;">{line}</div>'
     
     html_content = f"""
 <!DOCTYPE html>
@@ -404,14 +420,13 @@ def create_email_html(stock_data, ai_analysis, political_news, industry_news, fr
         .content {{ padding: 25px; }}
         .section {{ margin-bottom: 30px; }}
         .stock-table {{ width: 100%; border-collapse: collapse; margin: 20px 0; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }}
-        .stock-table th {{ background-color: #f8f9fa; padding: 12px; text-align: left; font-weight: 600; color: #2c3e50; border-bottom: 2px solid #e9ecef; }}
-        .stock-table td {{ padding: 12px; border-bottom: 1px solid #e9ecef; }}
-        .analysis-box {{ background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); padding: 25px; border-radius: 10px; line-height: 1.6; border-left: 5px solid #667eea; }}
+        .stock-table th {{ background-color: #f8f9fa; padding: 12px; text-align: left; font-weight: 600; color: #2c3e50; border-bottom: 2px solid #e9ecef; font-size: 14px; }}
+        .stock-table td {{ padding: 12px; border-bottom: 1px solid #e9ecef; font-size: 14px; }}
+        .analysis-box {{ background: white; padding: 25px; border-radius: 10px; line-height: 1.6; border: 1px solid #e9ecef; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }}
         .footer {{ text-align: center; padding: 25px; color: #6c757d; font-size: 13px; background: #f8f9fa; border-top: 1px solid #e9ecef; }}
-        .section-title {{ color: #2c3e50; font-size: 20px; font-weight: 600; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #667eea; }}
+        .section-title {{ color: #2c3e50; font-size: 18px; font-weight: 600; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #667eea; }}
         .news-section {{ background: #f8f9fa; border-radius: 10px; padding: 20px; margin: 20px 0; }}
-        .news-title {{ color: #495057; font-size: 18px; font-weight: 600; margin-bottom: 15px; }}
-        .metric-box {{ background: white; padding: 15px; border-radius: 8px; margin: 10px 0; border-left: 4px solid #667eea; }}
+        .news-title {{ color: #495057; font-size: 16px; font-weight: 600; margin-bottom: 15px; }}
     </style>
 </head>
 <body>
