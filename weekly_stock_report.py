@@ -19,17 +19,16 @@ for ticker in TICKERS:
     df.reset_index(inplace=True)
     data[ticker] = df
 
-# Create simple summary for AI
+# -------------------------
+# 2️⃣ Prepare AI prompt with last 7 closing prices
+# -------------------------
 market_summary = ""
 for ticker, df in data.items():
-    start_price = float(df.at[0, 'Close'])          # first row scalar
-    end_price = float(df.at[len(df)-1, 'Close'])   # last row scalar
-    change = end_price - start_price
-    pct_change = (change / start_price) * 100
-    market_summary += f"{ticker}: {start_price:.2f} -> {end_price:.2f} ({pct_change:.2f}%)\n"
+    closes = df['Close'].tail(7).tolist()  # last 7 closing prices as floats
+    market_summary += f"{ticker} last 7 closing prices: {closes}\n"
 
 # -------------------------
-# 2️⃣ Generate AI Analysis
+# 3️⃣ Generate AI Analysis
 # -------------------------
 openai.api_key = os.environ.get("OPENAI_API_KEY")
 
@@ -51,7 +50,7 @@ def generate_ai_summary(summary_text):
 ai_paragraph = generate_ai_summary(market_summary)
 
 # -------------------------
-# 3️⃣ Create chart
+# 4️⃣ Create chart
 # -------------------------
 plt.figure(figsize=(10,5))
 for ticker, df in data.items():
@@ -70,7 +69,7 @@ plt.savefig(graph_path, bbox_inches="tight")
 plt.close()
 
 # -------------------------
-# 4️⃣ Save Markdown report
+# 5️⃣ Save Markdown report
 # -------------------------
 md_path = f"reports/{today}-report.md"
 with open(md_path, "w", encoding="utf-8") as f:
@@ -81,7 +80,7 @@ with open(md_path, "w", encoding="utf-8") as f:
 print(f"Markdown report saved at: {md_path}")
 
 # -------------------------
-# 5️⃣ Create HTML email
+# 6️⃣ Create HTML email
 # -------------------------
 html_body = f"""
 <div style="font-family:Arial, sans-serif; line-height:1.5; color:#333;">
@@ -95,7 +94,7 @@ html_body = f"""
 """
 
 # -------------------------
-# 6️⃣ Send Email
+# 7️⃣ Send Email
 # -------------------------
 msg = MIMEMultipart()
 msg['From'] = f"{os.environ.get('FROM_NAME')} <{os.environ.get('SMTP_USER')}>"
