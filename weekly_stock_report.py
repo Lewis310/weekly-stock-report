@@ -9,6 +9,7 @@ from email.mime.image import MIMEImage
 import os
 from datetime import datetime, timedelta
 import io
+import requests
 
 def get_stock_data():
     """Fetch major US stock indices data"""
@@ -94,12 +95,15 @@ def create_stock_chart(stock_data):
     return img_bytes
 
 def generate_ai_analysis(stock_data):
-    """Generate AI analysis using OpenAI"""
+    """Generate AI analysis using OpenAI with better error handling"""
     openai_api_key = os.getenv('OPENAI_API_KEY')
-    if not openai_api_key:
-        return "❌ OpenAI API key not found. Please check your GitHub Secrets."
     
-    openai.api_key = openai_api_key
+    if not openai_api_key:
+        error_msg = "❌ OPENAI_API_KEY not found in environment variables"
+        print(error_msg)
+        return error_msg
+    
+    print(f"🔑 OpenAI API Key found: {openai_api_key[:8]}...")  # Print first 8 chars for verification
     
     # Create prompt with stock data
     stock_summary = "\n".join([
@@ -122,30 +126,96 @@ def generate_ai_analysis(stock_data):
     """
     
     try:
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": "You are a professional financial analyst providing morning market insights."},
-                {"role": "user", "content": prompt}
-            ],
-            max_tokens=500,
-            temperature=0.7
-        )
-        
-        return response.choices[0].message.content.strip()
+        # Method 1: Try with newer OpenAI client (if using openai>=1.0.0)
+        try:
+            from openai import OpenAI
+            client = OpenAI(api_key=openai_api_key)
+            
+            response = client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {"role": "system", "content": "You are a professional financial analyst providing morning market insights."},
+                    {"role": "user", "content": prompt}
+                ],
+                max_tokens=500,
+                temperature=0.7
+            )
+            analysis = response.choices[0].message.content.strip()
+            print("✅ AI analysis generated successfully (new client)")
+            return analysis
+            
+        except ImportError:
+            # Method 2: Fallback to older OpenAI client (openai<1.0.0)
+            openai.api_key = openai_api_key
+            
+            response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {"role": "system", "content": "You are a professional financial analyst providing morning market insights."},
+                    {"role": "user", "content": prompt}
+                ],
+                max_tokens=500,
+                temperature=0.7
+            )
+            analysis = response.choices[0].message.content.strip()
+            print("✅ AI analysis generated successfully (old client)")
+            return analysis
+            
     except Exception as e:
-        return f"⚠️ AI Analysis temporarily unavailable. Using fallback analysis.\n\nMarket Summary:\n{stock_summary}"
+        error_msg = f"❌ OpenAI API Error: {str(e)}"
+        print(error_msg)
+        print("🔧 Using fallback analysis...")
+        
+        # Fallback analysis based on stock data
+        return generate_fallback_analysis(stock_data)
+
+def generate_fallback_analysis(stock_data):
+    """Generate a basic analysis when OpenAI fails"""
+    print("🔄 Generating fallback analysis...")
+    
+    up_count = sum(1 for data in stock_data.values() if data['change_pct'] > 0)
+    down_count = sum(1 for data in stock_data.values() if data['change_pct'] < 0)
+    
+    if up_count > down_count:
+        sentiment = "bullish"
+    elif down_count > up_count:
+        sentiment = "bearish"
+    else:
+        sentiment = "mixed"
+    
+    best_performer = max(stock_data.values(), key=lambda x: x['change_pct'])
+    worst_performer = min(stock_data.values(), key=lambda x: x['change_pct'])
+    
+    analysis = f"""
+    Market Analysis (Fallback):
+    
+    Overall, the market shows a {sentiment} sentiment with {up_count} indices up and {down_count} down.
+    
+    Key Observations:
+    - {best_performer['name']} led gains with a {best_performer['change_pct']:+.2f}% increase
+    - {worst_performer['name']} underperformed with a {worst_performer['change_pct']:+.2f}% change
+    
+    Short-term Outlook:
+    Markets are showing {sentiment} momentum. Monitor for continuation of today's trends.
+    
+    Key Factor to Watch:
+    Market breadth and sector rotation will be important indicators for near-term direction.
+    
+    [Note: OpenAI analysis temporarily unavailable. This is an automated fallback report.]
+    """
+    
+    return analysis
 
 def create_email_html(stock_data, ai_analysis, from_name):
     """Create visually appealing HTML email"""
     
     current_date = datetime.now().strftime("%A, %B %d, %Y")
     
-    # Create stock table rows - FIXED: No backslashes in f-strings
+    # Create stock table rows
     stock_rows = ""
     for ticker, data in stock_data.items():
         change_color = "color: #2E8B57;" if data['change_pct'] >= 0 else "color: #DC143C;"
-        stock_row = f"""
+        stock_rows += f"""
         <tr>
             <td style="padding: 8px; border-bottom: 1px solid #ddd;"><strong>{data['name']}</strong></td>
             <td style="padding: 8px; border-bottom: 1px solid #ddd;">${data['current_price']:.2f}</td>
@@ -153,9 +223,7 @@ def create_email_html(stock_data, ai_analysis, from_name):
             <td style="padding: 8px; border-bottom: 1px solid #ddd; {change_color}">{data['change_pct']:+.2f}%</td>
         </tr>
         """
-        stock_rows += stock_row
     
-    # FIXED: Use triple quotes without backslashes in f-strings
     html_content = f"""
 <!DOCTYPE html>
 <html>
