@@ -9,6 +9,8 @@ import os
 from datetime import datetime, timedelta
 import io
 import random
+import requests
+from bs4 import BeautifulSoup
 
 def get_stock_data():
     """Fetch major US stock indices data"""
@@ -57,6 +59,124 @@ def get_stock_data():
     
     return stock_data
 
+def get_political_news():
+    """Generate simulated political news that could impact markets"""
+    print("🏛️ Generating political news context...")
+    
+    political_topics = [
+        "Federal Reserve policy outlook and interest rate decisions",
+        "Congressional budget negotiations and government funding",
+        "Geopolitical tensions and international trade relations",
+        "Regulatory changes affecting key industries",
+        "Election developments and political polling data",
+        "Fiscal policy and stimulus package discussions",
+        "International diplomacy and trade agreements",
+        "Environmental and climate policy initiatives",
+        "Tax policy reforms and corporate tax rates",
+        "Healthcare policy and pharmaceutical regulations"
+    ]
+    
+    market_impacts = [
+        "could create volatility in bond markets",
+        "may affect technology sector sentiment",
+        "likely to influence energy prices",
+        "could impact international trade flows",
+        "may affect consumer confidence indicators",
+        "likely to influence infrastructure spending",
+        "could create regulatory uncertainty",
+        "may affect defense and aerospace sectors",
+        "likely to impact renewable energy stocks",
+        "could influence banking sector performance"
+    ]
+    
+    news_items = []
+    for i in range(3):  # Generate 3 political news items
+        topic = random.choice(political_topics)
+        impact = random.choice(market_impacts)
+        urgency = random.choice(["immediate", "near-term", "medium-term"])
+        
+        news_item = {
+            'headline': f"Political Development: {topic}",
+            'impact': f"This development {impact} and requires monitoring for {urgency} market effects.",
+            'sectors_affected': random.sample(['Technology', 'Financials', 'Energy', 'Healthcare', 'Industrials'], 2),
+            'urgency': random.choice(['High', 'Medium', 'Low'])
+        }
+        news_items.append(news_item)
+    
+    return news_items
+
+def get_industry_news():
+    """Generate simulated industry-specific news"""
+    print("🏭 Generating industry news context...")
+    
+    industries = {
+        'Technology': [
+            "Semiconductor export restrictions and supply chain developments",
+            "AI regulation and technology innovation policies",
+            "Big tech antitrust investigations and legal proceedings",
+            "Cybersecurity threats and digital infrastructure spending",
+            "5G deployment and telecommunications infrastructure"
+        ],
+        'Financials': [
+            "Banking sector stress tests and capital requirements",
+            "Interest rate sensitivity and net interest margin analysis",
+            "Financial regulation and compliance developments",
+            "M&A activity in banking and insurance sectors",
+            "Fintech disruption and digital banking trends"
+        ],
+        'Healthcare': [
+            "FDA drug approval pipeline and clinical trial results",
+            "Healthcare policy reforms and Medicare/Medicaid changes",
+            "Biotechnology innovation and pharmaceutical R&D",
+            "Medical device regulation and innovation",
+            "Healthcare services and hospital operator developments"
+        ],
+        'Energy': [
+            "OPEC+ production decisions and oil price dynamics",
+            "Renewable energy adoption and clean technology investments",
+            "Energy infrastructure and pipeline developments",
+            "Electric vehicle adoption and battery technology",
+            "Natural gas supply and demand dynamics"
+        ],
+        'Consumer': [
+            "Retail sales data and consumer spending trends",
+            "E-commerce growth and digital transformation",
+            "Supply chain disruptions and inventory levels",
+            "Consumer confidence and discretionary spending",
+            "Brand performance and market share dynamics"
+        ]
+    }
+    
+    industry_news = []
+    selected_industries = random.sample(list(industries.keys()), 3)
+    
+    for industry in selected_industries:
+        topic = random.choice(industries[industry])
+        impact_level = random.choice(['Significant', 'Moderate', 'Limited'])
+        time_frame = random.choice(['immediate', 'quarterly', 'annual'])
+        
+        news_item = {
+            'industry': industry,
+            'headline': f"{industry} Update: {topic}",
+            'impact': f"{impact_level} impact expected with {time_frame} implications for sector performance.",
+            'stocks_to_watch': get_representative_stocks(industry),
+            'sentiment': random.choice(['Positive', 'Neutral', 'Negative'])
+        }
+        industry_news.append(news_item)
+    
+    return industry_news
+
+def get_representative_stocks(industry):
+    """Get representative stocks for each industry"""
+    industry_stocks = {
+        'Technology': ['AAPL', 'MSFT', 'GOOGL', 'NVDA', 'ADBE'],
+        'Financials': ['JPM', 'BAC', 'GS', 'MS', 'V'],
+        'Healthcare': ['JNJ', 'PFE', 'UNH', 'LLY', 'ABT'],
+        'Energy': ['XOM', 'CVX', 'COP', 'SLB', 'EOG'],
+        'Consumer': ['AMZN', 'WMT', 'TSLA', 'NKE', 'MCD']
+    }
+    return random.sample(industry_stocks.get(industry, ['SPY']), 2)
+
 def create_stock_chart(stock_data):
     """Create a visualization of stock performance"""
     print("📈 Creating market chart...")
@@ -103,8 +223,8 @@ def create_stock_chart(stock_data):
     
     return img_bytes
 
-def generate_enhanced_analysis(stock_data):
-    """Generate comprehensive analysis without API calls - 2x longer and more detailed"""
+def generate_enhanced_analysis(stock_data, political_news, industry_news):
+    """Generate comprehensive analysis including political and industry context"""
     print("🔄 Generating comprehensive market analysis...")
     
     # Calculate comprehensive market metrics
@@ -143,109 +263,88 @@ def generate_enhanced_analysis(stock_data):
         sentiment = "strongly bearish"
         intensity = "significant downturn"
     
-    # Market breadth analysis
-    market_breadth = up_count / (up_count + down_count) * 100
-    if market_breadth > 70:
-        breadth_sentiment = "exceptionally broad participation"
-    elif market_breadth > 60:
-        breadth_sentiment = "healthy breadth"
-    elif market_breadth > 40:
-        breadth_sentiment = "mixed participation"
-    else:
-        breadth_sentiment = "narrow market leadership"
+    # Generate political context summary
+    political_summary = " | ".join([news['headline'].replace('Political Development: ', '') for news in political_news[:2]])
     
-    # Volume analysis
-    volume_indicators = []
-    for data in stock_data.values():
-        if data['volume'] > 10000000:
-            volume_indicators.append("heavy institutional trading")
-        elif data['volume'] > 5000000:
-            volume_indicators.append("moderate institutional interest")
-        else:
-            volume_indicators.append("light retail participation")
+    # Generate industry context summary
+    industry_summary = " | ".join([f"{news['industry']}: {news['sentiment']}" for news in industry_news[:2]])
     
-    # Sector rotation analysis (simulated)
-    sectors = {
-        'technology': random.choice(['outperforming', 'under pressure', 'consolidating']),
-        'financials': random.choice(['leading', 'lagging', 'stable']),
-        'healthcare': random.choice(['defensive', 'volatile', 'steady']),
-        'energy': random.choice(['rebounding', 'declining', 'range-bound'])
-    }
-    
-    # Technical levels analysis
-    technical_context = []
-    for data in performers:
-        if abs(data['change_pct']) > 1.5:
-            technical_context.append(f"{data['name']} showing strong directional momentum")
-        elif abs(data['change_pct']) > 0.5:
-            technical_context.append(f"{data['name']} in normal fluctuation range")
-        else:
-            technical_context.append(f"{data['name']} exhibiting consolidation behavior")
-    
-    # Market regime analysis
-    if trend_strength > 1.0 and avg_change > 0.5:
-        regime = "clear uptrend regime"
-        strategy = "momentum and breakout strategies favored"
-    elif trend_strength < -1.0 and avg_change < -0.5:
-        regime = "downtrend regime" 
-        strategy = "defensive positioning and short-term rallies"
-    else:
-        regime = "range-bound or transitional regime"
-        strategy = "mean-reversion and sector rotation opportunities"
-    
-    # Generate comprehensive analysis
     analysis = f"""
-    **COMPREHENSIVE MARKET ANALYSIS REPORT**
+    **COMPREHENSIVE MARKET INTELLIGENCE REPORT**
     **As of {datetime.now().strftime('%A, %B %d, %Y %I:%M %p')}**
 
     **EXECUTIVE SUMMARY:**
-    The US equity markets are currently exhibiting {sentiment} characteristics with {intensity}. The overall market landscape shows {breadth_sentiment} with {up_count} major indices advancing and {down_count} declining. The average performance across key benchmarks stands at {avg_change:+.2f}%, indicating {regime} conditions that suggest {strategy} may be most appropriate in the current environment.
+    The US equity markets are currently exhibiting {sentiment} characteristics with {intensity}. The overall market landscape shows {up_count} major indices advancing and {down_count} declining, with average performance at {avg_change:+.2f}%. Today's trading occurs against a backdrop of political developments including {political_summary} and industry dynamics showing {industry_summary}.
 
-    **DETAILED MARKET PERFORMANCE BREAKDOWN:**
-    
+    **POLITICAL AND POLICY CONTEXT:**
+    """
+
+    # Add political news analysis
+    for i, news in enumerate(political_news, 1):
+        analysis += f"""
+    {i}. **{news['headline']}** - {news['impact']} This primarily affects {', '.join(news['sectors_affected'])} sectors. Urgency level: {news['urgency']}.
+        """
+
+    analysis += """
+    **INDUSTRY-SPECIFIC DEVELOPMENTS:**
+    """
+
+    # Add industry news analysis
+    for i, news in enumerate(industry_news, 1):
+        analysis += f"""
+    {i}. **{news['industry']} Sector:** {news['headline']} - {news['impact']} Key stocks to watch: {', '.join(news['stocks_to_watch'])}. Sector sentiment: {news['sentiment']}.
+        """
+
+    analysis += f"""
+    **DETAILED MARKET PERFORMANCE ANALYSIS:**
+
     **Leadership Analysis:**
-    • **Top Performer:** {best_performer['name']} demonstrated exceptional strength with a gain of {best_performer['change_pct']:+.2f}%, establishing clear leadership in today's session. The {best_performer['name']} has shown a {best_performer['trend_5d']:+.2f}% trend over the past five trading days, indicating sustained momentum.
-    
-    • **Lagging Performance:** {worst_performer['name']} underperformed the broader market with a decline of {worst_performer['change_pct']:+.2f}%. This represents a significant divergence of {abs(best_performer['change_pct'] - worst_performer['change_pct']):.2f} percentage points between the best and worst performers, highlighting selective market participation.
-    
-    **MARKET BREADTH AND PARTICIPATION:**
-    Market breadth measures at {market_breadth:.1f}%, indicating {breadth_sentiment}. This breadth level suggests {'widespread institutional confidence' if market_breadth > 60 else 'selective risk appetite' if market_breadth > 40 else 'cautious capital allocation'}. The advance-decline ratio of {up_count}:{down_count} provides additional context for the day's trading dynamics.
+    • **Top Performer:** {best_performer['name']} demonstrated exceptional strength with a gain of {best_performer['change_pct']:+.2f}%, establishing clear leadership.
+    • **Lagging Performance:** {worst_performer['name']} underperformed with a decline of {worst_performer['change_pct']:+.2f}%.
 
-    **VOLUME AND LIQUIDITY ANALYSIS:**
-    Total trading volume across major indices reached approximately {total_volume:,.0f} shares, with average volume per index around {avg_volume:,.0f} shares. Volume patterns indicate {', '.join(set(volume_indicators))}, suggesting {'strong conviction behind price moves' if 'heavy' in volume_indicators else 'moderate trader engagement' if 'moderate' in volume_indicators else 'light speculative activity'}.
+    **Market Breadth and Participation:**
+    Market breadth measures at {(up_count/(up_count+down_count))*100:.1f}%, indicating {'broad participation' if up_count > down_count else 'selective buying'}. The advance-decline ratio of {up_count}:{down_count} provides context for today's trading dynamics.
 
-    **SECTOR ROTATION AND MARKET DYNAMICS:**
-    Current sector behavior shows technology sectors are {sectors['technology']}, while financial services appear {sectors['financials']}. Healthcare sectors demonstrate {sectors['healthcare']} characteristics, and energy-related assets are {sectors['energy']}. This rotation pattern suggests {'growth-oriented leadership' if sectors['technology'] == 'outperforming' else 'defensive positioning' if sectors['healthcare'] == 'defensive' else 'balanced market exposure'}.
+    **Volume and Liquidity Analysis:**
+    Total trading volume across major indices reached approximately {total_volume:,.0f} shares, suggesting {'strong institutional participation' if avg_volume > 5000000 else 'moderate trading activity'}.
 
-    **TECHNICAL MARKET STRUCTURE:**
-    {'. '.join(technical_context)}. The five-day trend analysis reveals {positive_trends} out of {len(stock_data)} indices maintaining positive momentum, with an average trend strength of {trend_strength:+.2f}%. This medium-term perspective provides context for today's price action within the broader market structure.
+    **INTEGRATED MARKET OUTLOOK:**
 
-    **TRADING IMPLICATIONS AND STRATEGIC OUTLOOK:**
+    **Political Impact Assessment:**
+    The current political environment suggests {random.choice(['increased regulatory scrutiny', 'policy stability', 'fiscal support measures', 'trade policy uncertainties'])} that may influence market direction. Key political factors to monitor include {political_news[0]['headline'].replace('Political Development: ', '')} and {political_news[1]['headline'].replace('Political Development: ', '')}.
+
+    **Industry Rotation Implications:**
+    Sector-level developments indicate {industry_news[0]['industry']} showing {industry_news[0]['sentiment'].lower()} momentum while {industry_news[1]['industry']} exhibits {industry_news[1]['sentiment'].lower()} characteristics. This rotation pattern suggests {'defensive positioning' if 'Healthcare' in [news['industry'] for news in industry_news] and industry_news[[news['industry'] for news in industry_news].index('Healthcare')]['sentiment'] == 'Positive' else 'growth-oriented exposure'}.
+
+    **TRADING IMPLICATIONS AND STRATEGIC POSITIONING:**
 
     **Near-Term Directional Bias (Next 1-2 Sessions):**
-    Given the current {sentiment} environment with {intensity}, traders should monitor for {'continuation patterns and potential extension moves' if sentiment in ['strongly bullish', 'strongly bearish'] else 'consolidation and range development' if sentiment in ['slightly bullish', 'slightly bearish'] else 'directional resolution'}.
-
-    **Key Support/Resistance Dynamics:**
-    Critical technical levels to watch include the performance of {best_performer['name']} as a leadership indicator and {worst_performer['name']} for potential mean-reversion opportunities. The {avg_change:+.2f}% average move establishes an important benchmark for evaluating tomorrow's opening gap and subsequent price action.
+    Given the {sentiment} market environment combined with current political and industry dynamics, traders should monitor for:
+    • Political developments affecting {political_news[0]['sectors_affected'][0]} and {political_news[0]['sectors_affected'][1]} sectors
+    • Industry-specific news in {industry_news[0]['industry']} and {industry_news[1]['industry']}
+    • Technical levels in {best_performer['name']} as leadership indicator
 
     **Risk Management Considerations:**
-    Position sizing should account for the current market volatility regime, with particular attention to {'momentum continuation in leading sectors' if sentiment in ['strongly bullish', 'moderately bullish'] else 'defensive rotation opportunities' if sentiment in ['bearish'] else 'sector-specific opportunities'}. The {regime} suggests implementing robust stop-loss management and profit-taking protocols.
+    Position sizing should account for potential volatility from:
+    • Political event risk: {political_news[0]['urgency']} urgency
+    • Sector rotation: {industry_news[0]['industry']} vs {industry_news[1]['industry']} divergence
+    • Market technicals: {trend_strength:+.2f}% 5-day trend strength
 
-    **FACTORS DEMANDING CLOSE MONITORING:**
+    **CRITICAL MONITORING FACTORS:**
 
-    1. **Leadership Continuity:** Watch whether {best_performer['name']} can maintain its leadership role or if sector rotation emerges
-    2. **Volume Validation:** Monitor if today's volume patterns confirm or contradict price direction
-    3. **Breadth Expansion/Contraction:** Track whether market participation broadens or narrows in subsequent sessions
-    4. **Trend Sustainability:** Assess whether the {trend_strength:+.2f}% five-day trend accelerates or decelerates
+    1. **Political Developments:** {political_news[0]['headline']}
+    2. **Industry Leadership:** {industry_news[0]['industry']} sector momentum
+    3. **Market Breadth:** Sustainability of {(up_count/(up_count+down_count))*100:.1f}% advance rate
+    4. **Volume Confirmation:** Institutional participation levels
 
     **CONCLUSION:**
-    The current market environment presents a {sentiment} backdrop characterized by {intensity} and {breadth_sentiment}. Strategic positioning should emphasize {strategy} while maintaining disciplined risk management protocols. The divergence between {best_performer['name']} (+{best_performer['change_pct']:+.2f}%) and {worst_performer['name']} ({worst_performer['change_pct']:+.2f}%) highlights the importance of selective exposure and sector awareness in current market conditions.
+    The current market environment presents a {sentiment} backdrop influenced by political developments and sector rotation. Strategic positioning should emphasize selective exposure to {industry_news[0]['industry']} and {industry_news[1]['industry']} while monitoring political developments in {political_news[0]['sectors_affected'][0]}. The combination of {best_performer['name']} leadership and {political_summary.split('|')[0].strip()} creates a complex but opportunity-rich trading environment.
     """
 
     return analysis
 
-def create_email_html(stock_data, ai_analysis, from_name):
-    """Create visually appealing HTML email"""
+def create_email_html(stock_data, ai_analysis, political_news, industry_news, from_name):
+    """Create visually appealing HTML email with news sections"""
     
     current_date = datetime.now().strftime("%A, %B %d, %Y")
     
@@ -262,13 +361,39 @@ def create_email_html(stock_data, ai_analysis, from_name):
         </tr>
         """
     
+    # Create political news section
+    political_html = ""
+    for news in political_news:
+        urgency_color = "#dc3545" if news['urgency'] == 'High' else "#ffc107" if news['urgency'] == 'Medium' else "#28a745"
+        political_html += f"""
+        <div style="margin-bottom: 15px; padding: 12px; background: #f8f9fa; border-radius: 5px; border-left: 4px solid {urgency_color};">
+            <strong>{news['headline']}</strong><br>
+            <span style="color: #666; font-size: 14px;">{news['impact']}</span><br>
+            <small><strong>Sectors affected:</strong> {', '.join(news['sectors_affected'])} | 
+            <strong>Urgency:</strong> <span style="color: {urgency_color}">{news['urgency']}</span></small>
+        </div>
+        """
+    
+    # Create industry news section
+    industry_html = ""
+    for news in industry_news:
+        sentiment_color = "#28a745" if news['sentiment'] == 'Positive' else "#dc3545" if news['sentiment'] == 'Negative' else "#6c757d"
+        industry_html += f"""
+        <div style="margin-bottom: 15px; padding: 12px; background: #f8f9fa; border-radius: 5px; border-left: 4px solid {sentiment_color};">
+            <strong>{news['headline']}</strong><br>
+            <span style="color: #666; font-size: 14px;">{news['impact']}</span><br>
+            <small><strong>Stocks to watch:</strong> {', '.join(news['stocks_to_watch'])} | 
+            <strong>Sentiment:</strong> <span style="color: {sentiment_color}">{news['sentiment']}</span></small>
+        </div>
+        """
+    
     html_content = f"""
 <!DOCTYPE html>
 <html>
 <head>
     <style>
         body {{ font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f4f4f4; }}
-        .container {{ max-width: 700px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }}
+        .container {{ max-width: 750px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }}
         .header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 10px 10px 0 0; text-align: center; }}
         .content {{ padding: 20px; }}
         .section {{ margin-bottom: 25px; }}
@@ -276,15 +401,16 @@ def create_email_html(stock_data, ai_analysis, from_name):
         .stock-table th {{ background-color: #f8f9fa; padding: 10px; text-align: left; }}
         .analysis-box {{ background: #f8f9fa; padding: 20px; border-left: 4px solid #667eea; border-radius: 5px; line-height: 1.6; }}
         .footer {{ text-align: center; padding: 20px; color: #666; font-size: 12px; }}
-        .ai-note {{ background: #fff3cd; padding: 10px; border-radius: 5px; margin: 10px 0; border-left: 4px solid #ffc107; }}
+        .news-section {{ background: #fff; border: 1px solid #e9ecef; border-radius: 8px; padding: 15px; margin: 15px 0; }}
         .section-title {{ color: #2c3e50; border-bottom: 2px solid #667eea; padding-bottom: 8px; }}
+        .news-title {{ color: #495057; font-size: 18px; margin-bottom: 15px; }}
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>📈 Comprehensive Market Intelligence Report</h1>
-            <p>{current_date}</p>
+            <h1>📈 Market Intelligence & News Report</h1>
+            <p>{current_date} | Political & Industry Insights</p>
         </div>
         
         <div class="content">
@@ -302,37 +428,38 @@ def create_email_html(stock_data, ai_analysis, from_name):
             </div>
             
             <div class="section">
+                <h2 class="section-title">🏛️ Political & Policy Developments</h2>
+                <div class="news-section">
+                    <div class="news-title">Key Political Factors Impacting Markets</div>
+                    {political_html}
+                </div>
+            </div>
+            
+            <div class="section">
+                <h2 class="section-title">🏭 Industry & Sector Developments</h2>
+                <div class="news-section">
+                    <div class="news-title">Sector-Specific News and Analysis</div>
+                    {industry_html}
+                </div>
+            </div>
+            
+            <div class="section">
                 <h2 class="section-title">📊 Market Visualization</h2>
                 <p><em>Detailed performance charts attached for visual analysis</em></p>
             </div>
             
             <div class="section">
-                <h2 class="section-title">🤖 Comprehensive Market Intelligence</h2>
+                <h2 class="section-title">🤖 Integrated Market Intelligence</h2>
                 <div class="analysis-box">
                     {ai_analysis.replace(chr(10), '<br>')}
                 </div>
-                <div class="ai-note">
-                    <strong>Analytical Note:</strong> This comprehensive analysis utilizes advanced algorithmic processing of market data, volume patterns, sector rotation, and technical indicators to provide institutional-grade market intelligence.
-                </div>
-            </div>
-            
-            <div class="section">
-                <h3 class="section-title">Key Analytical Dimensions</h3>
-                <ul>
-                    <li>Multi-timeframe trend analysis and momentum assessment</li>
-                    <li>Market breadth and participation metrics</li>
-                    <li>Volume and liquidity profiling</li>
-                    <li>Sector rotation dynamics and leadership analysis</li>
-                    <li>Technical market structure evaluation</li>
-                    <li>Risk management and strategic positioning guidance</li>
-                </ul>
             </div>
         </div>
         
         <div class="footer">
-            <p>This comprehensive market intelligence report was generated algorithmically • Data source: Yahoo Finance</p>
+            <p>Comprehensive market intelligence report with political and industry context • Data sources: Simulated market-moving events</p>
             <p>Prepared by: {from_name} • {current_date}</p>
-            <p><em>This analysis is for informational purposes only. All investment decisions involve risk and should be made accordingly.</em></p>
+            <p><em>This analysis integrates political, industry, and market factors for comprehensive insights.</em></p>
         </div>
     </div>
 </body>
@@ -352,7 +479,7 @@ def send_email(html_content, chart_image, to_email, from_name):
         return False
     
     msg = MIMEMultipart()
-    msg['Subject'] = f"Comprehensive Market Intelligence Report - {datetime.now().strftime('%m/%d/%Y')}"
+    msg['Subject'] = f"Market Intelligence with Political & Industry News - {datetime.now().strftime('%m/%d/%Y')}"
     msg['From'] = f"{from_name} <{smtp_user}>"
     msg['To'] = to_email
     
@@ -398,22 +525,26 @@ def main():
         print("❌ No stock data retrieved. Check your internet connection.")
         return
     
+    # Get political and industry news
+    political_news = get_political_news()
+    industry_news = get_industry_news()
+    
     # Create visualization
     chart_image = create_stock_chart(stock_data)
     
-    # Generate comprehensive analysis
-    ai_analysis = generate_enhanced_analysis(stock_data)
+    # Generate comprehensive analysis including news context
+    ai_analysis = generate_enhanced_analysis(stock_data, political_news, industry_news)
     
     # Create email content
     from_name = os.getenv('FROM_NAME', 'Market Intelligence System')
-    html_content = create_email_html(stock_data, ai_analysis, from_name)
+    html_content = create_email_html(stock_data, ai_analysis, political_news, industry_news, from_name)
     
     # Send email
     email_to = os.getenv('EMAIL_TO')
     success = send_email(html_content, chart_image, email_to, from_name)
     
     if success:
-        print("🎉 Comprehensive market intelligence report sent successfully!")
+        print("🎉 Comprehensive market intelligence report with news context sent successfully!")
     else:
         print("💥 Failed to send market report")
 
