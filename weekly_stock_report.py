@@ -21,10 +21,12 @@ for ticker in TICKERS:
 # -------------------------
 # 2️⃣ Prepare AI prompt
 # -------------------------
-# You can use recent closing prices or just a general prompt
 market_summary = ""
 for ticker, df in data.items():
-    closes = df['Close'].tail(7).tolist()
+    closes = df['Close']
+    if isinstance(closes, type(df)):  # If df['Close'] is a DataFrame, not Series
+        closes = closes.iloc[:, 0]  # Take the first column
+    closes = closes.tail(7).tolist()
     market_summary += f"{ticker} recent closing prices: {closes}\n"
 
 # -------------------------
@@ -54,7 +56,7 @@ ai_paragraph = generate_ai_summary(market_summary)
 # -------------------------
 plt.figure(figsize=(10,5))
 for ticker, df in data.items():
-    plt.plot(df['Date'], df['Close'], label=ticker)
+    plt.plot(df['Date'], df['Close'].iloc[:, 0] if isinstance(df['Close'], type(df)) else df['Close'], label=ticker)
 plt.title("Weekly US Market Index Movement")
 plt.xlabel("Date")
 plt.ylabel("Closing Price")
