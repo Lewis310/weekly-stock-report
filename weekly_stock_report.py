@@ -109,15 +109,15 @@ def generate_ai_analysis(stock_data):
     
     prompt = f"""
     As a financial analyst, provide a concise but insightful market summary based on the following US stock market data:
-    
+
     {stock_summary}
-    
+
     Please provide:
     1. A brief overall market summary (2-3 sentences)
     2. Key observations about today's movement
     3. Short-term outlook (next 1-2 days)
     4. One key factor to watch
-    
+
     Keep it professional, data-driven, and avoid hype. Use clear, concise language suitable for a morning email report.
     """
     
@@ -141,11 +141,11 @@ def create_email_html(stock_data, ai_analysis, from_name):
     
     current_date = datetime.now().strftime("%A, %B %d, %Y")
     
-    # Create stock table rows
+    # Create stock table rows - FIXED: No backslashes in f-strings
     stock_rows = ""
     for ticker, data in stock_data.items():
         change_color = "color: #2E8B57;" if data['change_pct'] >= 0 else "color: #DC143C;"
-        stock_rows += f"""
+        stock_row = f"""
         <tr>
             <td style="padding: 8px; border-bottom: 1px solid #ddd;"><strong>{data['name']}</strong></td>
             <td style="padding: 8px; border-bottom: 1px solid #ddd;">${data['current_price']:.2f}</td>
@@ -153,74 +153,76 @@ def create_email_html(stock_data, ai_analysis, from_name):
             <td style="padding: 8px; border-bottom: 1px solid #ddd; {change_color}">{data['change_pct']:+.2f}%</td>
         </tr>
         """
+        stock_rows += stock_row
     
+    # FIXED: Use triple quotes without backslashes in f-strings
     html_content = f"""
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <style>
-            body {{ font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f4f4f4; }}
-            .container {{ max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }}
-            .header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 10px 10px 0 0; text-align: center; }}
-            .content {{ padding: 20px; }}
-            .section {{ margin-bottom: 20px; }}
-            .stock-table {{ width: 100%; border-collapse: collapse; margin: 15px 0; }}
-            .stock-table th {{ background-color: #f8f9fa; padding: 10px; text-align: left; }}
-            .analysis-box {{ background: #f8f9fa; padding: 15px; border-left: 4px solid #667eea; border-radius: 5px; }}
-            .footer {{ text-align: center; padding: 20px; color: #666; font-size: 12px; }}
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <div class="header">
-                <h1>📈 Morning Market Report</h1>
-                <p>{current_date}</p>
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {{ font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f4f4f4; }}
+        .container {{ max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }}
+        .header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 10px 10px 0 0; text-align: center; }}
+        .content {{ padding: 20px; }}
+        .section {{ margin-bottom: 20px; }}
+        .stock-table {{ width: 100%; border-collapse: collapse; margin: 15px 0; }}
+        .stock-table th {{ background-color: #f8f9fa; padding: 10px; text-align: left; }}
+        .analysis-box {{ background: #f8f9fa; padding: 15px; border-left: 4px solid #667eea; border-radius: 5px; }}
+        .footer {{ text-align: center; padding: 20px; color: #666; font-size: 12px; }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📈 Morning Market Report</h1>
+            <p>{current_date}</p>
+        </div>
+        
+        <div class="content">
+            <div class="section">
+                <h2>Market Snapshot</h2>
+                <table class="stock-table">
+                    <tr>
+                        <th>Index</th>
+                        <th>Price</th>
+                        <th>Change</th>
+                        <th>% Change</th>
+                    </tr>
+                    {stock_rows}
+                </table>
             </div>
             
-            <div class="content">
-                <div class="section">
-                    <h2>Market Snapshot</h2>
-                    <table class="stock-table">
-                        <tr>
-                            <th>Index</th>
-                            <th>Price</th>
-                            <th>Change</th>
-                            <th>% Change</th>
-                        </tr>
-                        {stock_rows}
-                    </table>
-                </div>
-                
-                <div class="section">
-                    <h2>📊 Market Visualization</h2>
-                    <p><em>See attached chart for detailed performance visualization</em></p>
-                </div>
-                
-                <div class="section">
-                    <h2>🤖 AI Market Analysis</h2>
-                    <div class="analysis-box">
-                        {ai_analysis.replace('\n', '<br>')}
-                    </div>
-                </div>
-                
-                <div class="section">
-                    <h3>Key Takeaways</h3>
-                    <ul>
-                        <li>Real-time data as of market open</li>
-                        <li>AI-powered insights and predictions</li>
-                        <li>Visual performance tracking</li>
-                    </ul>
+            <div class="section">
+                <h2>📊 Market Visualization</h2>
+                <p><em>See attached chart for detailed performance visualization</em></p>
+            </div>
+            
+            <div class="section">
+                <h2>🤖 AI Market Analysis</h2>
+                <div class="analysis-box">
+                    {ai_analysis.replace(chr(10), '<br>')}
                 </div>
             </div>
             
-            <div class="footer">
-                <p>This report was generated automatically by AI • Data source: Yahoo Finance</p>
-                <p>Prepared by: {from_name} • {current_date}</p>
-                <p><em>This is for informational purposes only. Invest at your own risk.</em></p>
+            <div class="section">
+                <h3>Key Takeaways</h3>
+                <ul>
+                    <li>Real-time data as of market open</li>
+                    <li>AI-powered insights and predictions</li>
+                    <li>Visual performance tracking</li>
+                </ul>
             </div>
         </div>
-    </body>
-    </html>
+        
+        <div class="footer">
+            <p>This report was generated automatically by AI • Data source: Yahoo Finance</p>
+            <p>Prepared by: {from_name} • {current_date}</p>
+            <p><em>This is for informational purposes only. Invest at your own risk.</em></p>
+        </div>
+    </div>
+</body>
+</html>
     """
     
     return html_content
