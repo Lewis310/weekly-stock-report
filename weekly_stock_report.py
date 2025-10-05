@@ -15,15 +15,15 @@ import smtplib
 TICKERS = ["^GSPC", "^DJI", "^IXIC"]  # S&P 500, Dow Jones, NASDAQ
 data = {}
 for ticker in TICKERS:
-    df = yf.download(ticker, period="7d", interval="1d")
+    df = yf.download(ticker, period="7d", interval="1d", auto_adjust=True)  # auto_adjust fixes warning
     df.reset_index(inplace=True)
     data[ticker] = df
 
 # Create simple summary for AI
 market_summary = ""
 for ticker, df in data.items():
-    start_price = df['Close'].iloc[0]
-    end_price = df['Close'].iloc[-1]
+    start_price = df['Close'].values[0]   # use .values[0] to get a float
+    end_price = df['Close'].values[-1]    # last value as float
     change = end_price - start_price
     pct_change = (change / start_price) * 100
     market_summary += f"{ticker}: {start_price:.2f} -> {end_price:.2f} ({pct_change:.2f}%)\n"
