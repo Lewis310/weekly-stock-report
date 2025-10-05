@@ -223,128 +223,96 @@ def create_stock_chart(stock_data):
     
     return img_bytes
 
-def generate_enhanced_analysis(stock_data, political_news, industry_news):
-    """Generate comprehensive analysis including political and industry context"""
-    print("🔄 Generating comprehensive market analysis...")
+def generate_clean_analysis(stock_data, political_news, industry_news):
+    """Generate clean, organized market intelligence analysis"""
+    print("🔄 Generating clean market analysis...")
     
-    # Calculate comprehensive market metrics
+    # Calculate market metrics
     up_count = sum(1 for data in stock_data.values() if data['change_pct'] > 0)
     down_count = sum(1 for data in stock_data.values() if data['change_pct'] < 0)
     avg_change = sum(data['change_pct'] for data in stock_data.values()) / len(stock_data)
-    total_volume = sum(data['volume'] for data in stock_data.values())
-    avg_volume = total_volume / len(stock_data)
     
     # Performance rankings
     performers = sorted(stock_data.values(), key=lambda x: x['change_pct'], reverse=True)
     best_performer = performers[0]
     worst_performer = performers[-1]
     
-    # Trend analysis
-    positive_trends = sum(1 for data in stock_data.values() if data['trend_5d'] > 0)
-    trend_strength = sum(data['trend_5d'] for data in stock_data.values()) / len(stock_data)
-    
-    # Market sentiment classification
+    # Market sentiment
     if avg_change > 1.0:
         sentiment = "strongly bullish"
-        intensity = "high momentum"
     elif avg_change > 0.5:
-        sentiment = "moderately bullish" 
-        intensity = "steady momentum"
+        sentiment = "moderately bullish"
     elif avg_change > 0:
         sentiment = "slightly bullish"
-        intensity = "cautious optimism"
     elif avg_change > -0.5:
         sentiment = "slightly bearish"
-        intensity = "mild pressure"
-    elif avg_change > -1.0:
-        sentiment = "moderately bearish"
-        intensity = "notable selling pressure"
     else:
-        sentiment = "strongly bearish"
-        intensity = "significant downturn"
-    
-    # Generate political context summary
-    political_summary = " | ".join([news['headline'].replace('Political Development: ', '') for news in political_news[:2]])
-    
-    # Generate industry context summary
-    industry_summary = " | ".join([f"{news['industry']}: {news['sentiment']}" for news in industry_news[:2]])
-    
+        sentiment = "bearish"
+
     analysis = f"""
-    **COMPREHENSIVE MARKET INTELLIGENCE REPORT**
-    **As of {datetime.now().strftime('%A, %B %d, %Y %I:%M %p')}**
+**MARKET INTELLIGENCE SUMMARY**
+*Generated {datetime.now().strftime('%m/%d/%Y %I:%M %p')}*
 
-    **EXECUTIVE SUMMARY:**
-    The US equity markets are currently exhibiting {sentiment} characteristics with {intensity}. The overall market landscape shows {up_count} major indices advancing and {down_count} declining, with average performance at {avg_change:+.2f}%. Today's trading occurs against a backdrop of political developments including {political_summary} and industry dynamics showing {industry_summary}.
+## 📈 MARKET OVERVIEW
+- **Sentiment**: {sentiment.title()}
+- **Performance**: {up_count} indices up, {down_count} down
+- **Average Change**: {avg_change:+.2f}%
+- **Leadership**: {best_performer['name']} (+{best_performer['change_pct']:+.2f}%)
+- **Lagging**: {worst_performer['name']} ({worst_performer['change_pct']:+.2f}%)
 
-    **POLITICAL AND POLICY CONTEXT:**
-    """
+## 🏛️ POLITICAL CATALYSTS
 
-    # Add political news analysis
+"""
+
+    # Add political catalysts
     for i, news in enumerate(political_news, 1):
-        analysis += f"""
-    {i}. **{news['headline']}** - {news['impact']} This primarily affects {', '.join(news['sectors_affected'])} sectors. Urgency level: {news['urgency']}.
-        """
+        analysis += f"""**{i}. {news['headline'].replace('Political Development: ', '')}**
+   - Impact: {news['impact']}
+   - Sectors: {', '.join(news['sectors_affected'])}
+   - Urgency: {news['urgency']}
 
-    analysis += """
-    **INDUSTRY-SPECIFIC DEVELOPMENTS:**
-    """
+"""
 
-    # Add industry news analysis
+    analysis += """## 🏭 SECTOR OUTLOOK
+
+"""
+
+    # Add sector outlook
     for i, news in enumerate(industry_news, 1):
-        analysis += f"""
-    {i}. **{news['industry']} Sector:** {news['headline']} - {news['impact']} Key stocks to watch: {', '.join(news['stocks_to_watch'])}. Sector sentiment: {news['sentiment']}.
-        """
+        analysis += f"""**{i}. {news['industry']} Sector**
+   - Development: {news['headline'].replace(f"{news['industry']} Update: ", "")}
+   - Sentiment: {news['sentiment']}
+   - Watch: {', '.join(news['stocks_to_watch'])}
+   - Outlook: {news['impact']}
 
-    analysis += f"""
-    **DETAILED MARKET PERFORMANCE ANALYSIS:**
+"""
 
-    **Leadership Analysis:**
-    • **Top Performer:** {best_performer['name']} demonstrated exceptional strength with a gain of {best_performer['change_pct']:+.2f}%, establishing clear leadership.
-    • **Lagging Performance:** {worst_performer['name']} underperformed with a decline of {worst_performer['change_pct']:+.2f}%.
+    analysis += f"""## 💡 TRADING INSIGHTS
 
-    **Market Breadth and Participation:**
-    Market breadth measures at {(up_count/(up_count+down_count))*100:.1f}%, indicating {'broad participation' if up_count > down_count else 'selective buying'}. The advance-decline ratio of {up_count}:{down_count} provides context for today's trading dynamics.
+### Key Opportunities
+- **{best_performer['name']} Momentum**: Leading with {best_performer['change_pct']:+.2f}% gain
+- **Sector Focus**: {industry_news[0]['industry']} showing {industry_news[0]['sentiment'].lower()} momentum
+- **Political Plays**: {political_news[0]['sectors_affected'][0]} sector affected by {political_news[0]['headline'].split(':')[1].strip()}
 
-    **Volume and Liquidity Analysis:**
-    Total trading volume across major indices reached approximately {total_volume:,.0f} shares, suggesting {'strong institutional participation' if avg_volume > 5000000 else 'moderate trading activity'}.
+### Risk Considerations
+- Monitor {worst_performer['name']} for potential reversal
+- {political_news[0]['urgency']} urgency political development in {political_news[0]['sectors_affected'][0]}
+- {industry_news[1]['industry']} sector showing {industry_news[1]['sentiment'].lower()} sentiment
 
-    **INTEGRATED MARKET OUTLOOK:**
+### Actionable Items
+1. Watch {best_performer['name']} for continued leadership
+2. Monitor {political_news[0]['sectors_affected'][0]} for political impact
+3. Track {industry_news[0]['stocks_to_watch'][0]} in {industry_news[0]['industry']} sector
+4. Review {worst_performer['name']} for potential mean reversion
 
-    **Political Impact Assessment:**
-    The current political environment suggests {random.choice(['increased regulatory scrutiny', 'policy stability', 'fiscal support measures', 'trade policy uncertainties'])} that may influence market direction. Key political factors to monitor include {political_news[0]['headline'].replace('Political Development: ', '')} and {political_news[1]['headline'].replace('Political Development: ', '')}.
-
-    **Industry Rotation Implications:**
-    Sector-level developments indicate {industry_news[0]['industry']} showing {industry_news[0]['sentiment'].lower()} momentum while {industry_news[1]['industry']} exhibits {industry_news[1]['sentiment'].lower()} characteristics. This rotation pattern suggests {'defensive positioning' if 'Healthcare' in [news['industry'] for news in industry_news] and industry_news[[news['industry'] for news in industry_news].index('Healthcare')]['sentiment'] == 'Positive' else 'growth-oriented exposure'}.
-
-    **TRADING IMPLICATIONS AND STRATEGIC POSITIONING:**
-
-    **Near-Term Directional Bias (Next 1-2 Sessions):**
-    Given the {sentiment} market environment combined with current political and industry dynamics, traders should monitor for:
-    • Political developments affecting {political_news[0]['sectors_affected'][0]} and {political_news[0]['sectors_affected'][1]} sectors
-    • Industry-specific news in {industry_news[0]['industry']} and {industry_news[1]['industry']}
-    • Technical levels in {best_performer['name']} as leadership indicator
-
-    **Risk Management Considerations:**
-    Position sizing should account for potential volatility from:
-    • Political event risk: {political_news[0]['urgency']} urgency
-    • Sector rotation: {industry_news[0]['industry']} vs {industry_news[1]['industry']} divergence
-    • Market technicals: {trend_strength:+.2f}% 5-day trend strength
-
-    **CRITICAL MONITORING FACTORS:**
-
-    1. **Political Developments:** {political_news[0]['headline']}
-    2. **Industry Leadership:** {industry_news[0]['industry']} sector momentum
-    3. **Market Breadth:** Sustainability of {(up_count/(up_count+down_count))*100:.1f}% advance rate
-    4. **Volume Confirmation:** Institutional participation levels
-
-    **CONCLUSION:**
-    The current market environment presents a {sentiment} backdrop influenced by political developments and sector rotation. Strategic positioning should emphasize selective exposure to {industry_news[0]['industry']} and {industry_news[1]['industry']} while monitoring political developments in {political_news[0]['sectors_affected'][0]}. The combination of {best_performer['name']} leadership and {political_summary.split('|')[0].strip()} creates a complex but opportunity-rich trading environment.
-    """
+## 🎯 STRATEGIC OUTLOOK
+The market shows {sentiment} characteristics with {industry_news[0]['industry']} leading and {political_news[0]['sectors_affected'][0]} facing political headwinds. Focus on quality names in strong sectors while managing exposure to politically sensitive areas.
+"""
 
     return analysis
 
 def create_email_html(stock_data, ai_analysis, political_news, industry_news, from_name):
-    """Create visually appealing HTML email with news sections"""
+    """Create visually appealing HTML email with clean organization"""
     
     current_date = datetime.now().strftime("%A, %B %d, %Y")
     
@@ -352,12 +320,24 @@ def create_email_html(stock_data, ai_analysis, political_news, industry_news, fr
     stock_rows = ""
     for ticker, data in stock_data.items():
         change_color = "color: #2E8B57;" if data['change_pct'] >= 0 else "color: #DC143C;"
+        trend_icon = "📈" if data['trend_5d'] > 0 else "📉" if data['trend_5d'] < 0 else "➡️"
         stock_rows += f"""
         <tr>
-            <td style="padding: 8px; border-bottom: 1px solid #ddd;"><strong>{data['name']}</strong></td>
-            <td style="padding: 8px; border-bottom: 1px solid #ddd;">${data['current_price']:.2f}</td>
-            <td style="padding: 8px; border-bottom: 1px solid #ddd; {change_color}">{data['change']:+.2f}</td>
-            <td style="padding: 8px; border-bottom: 1px solid #ddd; {change_color}">{data['change_pct']:+.2f}%</td>
+            <td style="padding: 10px; border-bottom: 1px solid #e0e0e0;">
+                <strong>{data['name']}</strong>
+            </td>
+            <td style="padding: 10px; border-bottom: 1px solid #e0e0e0;">
+                ${data['current_price']:.2f}
+            </td>
+            <td style="padding: 10px; border-bottom: 1px solid #e0e0e0; {change_color}">
+                {data['change']:+.2f}
+            </td>
+            <td style="padding: 10px; border-bottom: 1px solid #e0e0e0; {change_color}">
+                {data['change_pct']:+.2f}%
+            </td>
+            <td style="padding: 10px; border-bottom: 1px solid #e0e0e0; color: #666;">
+                {trend_icon} {data['trend_5d']:+.1f}%
+            </td>
         </tr>
         """
     
@@ -366,11 +346,17 @@ def create_email_html(stock_data, ai_analysis, political_news, industry_news, fr
     for news in political_news:
         urgency_color = "#dc3545" if news['urgency'] == 'High' else "#ffc107" if news['urgency'] == 'Medium' else "#28a745"
         political_html += f"""
-        <div style="margin-bottom: 15px; padding: 12px; background: #f8f9fa; border-radius: 5px; border-left: 4px solid {urgency_color};">
-            <strong>{news['headline']}</strong><br>
-            <span style="color: #666; font-size: 14px;">{news['impact']}</span><br>
-            <small><strong>Sectors affected:</strong> {', '.join(news['sectors_affected'])} | 
-            <strong>Urgency:</strong> <span style="color: {urgency_color}">{news['urgency']}</span></small>
+        <div style="margin: 12px 0; padding: 15px; background: white; border-radius: 8px; border-left: 4px solid {urgency_color}; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+            <div style="font-weight: bold; margin-bottom: 8px; color: #2c3e50;">{news['headline']}</div>
+            <div style="color: #666; font-size: 14px; margin-bottom: 8px;">{news['impact']}</div>
+            <div style="font-size: 13px; color: #7f8c8d;">
+                <span style="background: #f8f9fa; padding: 4px 8px; border-radius: 4px; margin-right: 8px;">
+                    🎯 {', '.join(news['sectors_affected'])}
+                </span>
+                <span style="background: {urgency_color}15; color: {urgency_color}; padding: 4px 8px; border-radius: 4px;">
+                    ⚡ {news['urgency']} Urgency
+                </span>
+            </div>
         </div>
         """
     
@@ -379,87 +365,102 @@ def create_email_html(stock_data, ai_analysis, political_news, industry_news, fr
     for news in industry_news:
         sentiment_color = "#28a745" if news['sentiment'] == 'Positive' else "#dc3545" if news['sentiment'] == 'Negative' else "#6c757d"
         industry_html += f"""
-        <div style="margin-bottom: 15px; padding: 12px; background: #f8f9fa; border-radius: 5px; border-left: 4px solid {sentiment_color};">
-            <strong>{news['headline']}</strong><br>
-            <span style="color: #666; font-size: 14px;">{news['impact']}</span><br>
-            <small><strong>Stocks to watch:</strong> {', '.join(news['stocks_to_watch'])} | 
-            <strong>Sentiment:</strong> <span style="color: {sentiment_color}">{news['sentiment']}</span></small>
+        <div style="margin: 12px 0; padding: 15px; background: white; border-radius: 8px; border-left: 4px solid {sentiment_color}; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+            <div style="font-weight: bold; margin-bottom: 8px; color: #2c3e50;">
+                🏭 {news['industry']}: {news['headline'].replace(f"{news['industry']} Update: ", "")}
+            </div>
+            <div style="color: #666; font-size: 14px; margin-bottom: 8px;">{news['impact']}</div>
+            <div style="font-size: 13px; color: #7f8c8d;">
+                <span style="background: #f8f9fa; padding: 4px 8px; border-radius: 4px; margin-right: 8px;">
+                    📊 {', '.join(news['stocks_to_watch'])}
+                </span>
+                <span style="background: {sentiment_color}15; color: {sentiment_color}; padding: 4px 8px; border-radius: 4px;">
+                    📈 {news['sentiment']} Sentiment
+                </span>
+            </div>
         </div>
         """
+    
+    # Convert analysis to clean HTML
+    analysis_html = ai_analysis.replace('## ', '<h3 style="color: #2c3e50; border-bottom: 2px solid #667eea; padding-bottom: 5px; margin-top: 20px;">') \
+                              .replace('**', '<strong>') \
+                              .replace('**', '</strong>') \
+                              .replace('\n\n', '</p><p style="margin: 10px 0; line-height: 1.6;">') \
+                              .replace('\n', '<br>') \
+                              .replace('<h3 style="color: #2c3e50; border-bottom: 2px solid #667eea; padding-bottom: 5px; margin-top: 20px;">', '</p><h3 style="color: #2c3e50; border-bottom: 2px solid #667eea; padding-bottom: 5px; margin-top: 20px;">') \
+                              .replace('### ', '<h4 style="color: #34495e; margin: 15px 0 10px 0;">') \
+                              .replace('<h4 style="color: #34495e; margin: 15px 0 10px 0;">', '</p><h4 style="color: #34495e; margin: 15px 0 10px 0;">')
+    
+    analysis_html = f'<p style="margin: 10px 0; line-height: 1.6;">{analysis_html}</p>'
     
     html_content = f"""
 <!DOCTYPE html>
 <html>
 <head>
     <style>
-        body {{ font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f4f4f4; }}
-        .container {{ max-width: 750px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }}
-        .header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 10px 10px 0 0; text-align: center; }}
-        .content {{ padding: 20px; }}
-        .section {{ margin-bottom: 25px; }}
-        .stock-table {{ width: 100%; border-collapse: collapse; margin: 15px 0; }}
-        .stock-table th {{ background-color: #f8f9fa; padding: 10px; text-align: left; }}
-        .analysis-box {{ background: #f8f9fa; padding: 20px; border-left: 4px solid #667eea; border-radius: 5px; line-height: 1.6; }}
-        .footer {{ text-align: center; padding: 20px; color: #666; font-size: 12px; }}
-        .news-section {{ background: #fff; border: 1px solid #e9ecef; border-radius: 8px; padding: 15px; margin: 15px 0; }}
-        .section-title {{ color: #2c3e50; border-bottom: 2px solid #667eea; padding-bottom: 8px; }}
-        .news-title {{ color: #495057; font-size: 18px; margin-bottom: 15px; }}
+        body {{ font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 20px; background-color: #f8f9fa; }}
+        .container {{ max-width: 800px; margin: 0 auto; background: white; padding: 0; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); overflow: hidden; }}
+        .header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 25px; text-align: center; }}
+        .content {{ padding: 25px; }}
+        .section {{ margin-bottom: 30px; }}
+        .stock-table {{ width: 100%; border-collapse: collapse; margin: 20px 0; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }}
+        .stock-table th {{ background-color: #f8f9fa; padding: 12px; text-align: left; font-weight: 600; color: #2c3e50; border-bottom: 2px solid #e9ecef; }}
+        .stock-table td {{ padding: 12px; border-bottom: 1px solid #e9ecef; }}
+        .analysis-box {{ background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); padding: 25px; border-radius: 10px; line-height: 1.6; border-left: 5px solid #667eea; }}
+        .footer {{ text-align: center; padding: 25px; color: #6c757d; font-size: 13px; background: #f8f9fa; border-top: 1px solid #e9ecef; }}
+        .section-title {{ color: #2c3e50; font-size: 20px; font-weight: 600; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #667eea; }}
+        .news-section {{ background: #f8f9fa; border-radius: 10px; padding: 20px; margin: 20px 0; }}
+        .news-title {{ color: #495057; font-size: 18px; font-weight: 600; margin-bottom: 15px; }}
+        .metric-box {{ background: white; padding: 15px; border-radius: 8px; margin: 10px 0; border-left: 4px solid #667eea; }}
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>📈 Market Intelligence & News Report</h1>
-            <p>{current_date} | Political & Industry Insights</p>
+            <h1 style="margin: 0; font-size: 28px; font-weight: 300;">📊 Market Intelligence Report</h1>
+            <p style="margin: 8px 0 0 0; opacity: 0.9; font-size: 16px;">{current_date}</p>
         </div>
         
         <div class="content">
             <div class="section">
-                <h2 class="section-title">Market Performance Snapshot</h2>
+                <h2 class="section-title">📈 Market Performance</h2>
                 <table class="stock-table">
                     <tr>
                         <th>Index</th>
                         <th>Price</th>
                         <th>Change</th>
                         <th>% Change</th>
+                        <th>5D Trend</th>
                     </tr>
                     {stock_rows}
                 </table>
             </div>
             
             <div class="section">
-                <h2 class="section-title">🏛️ Political & Policy Developments</h2>
+                <h2 class="section-title">🏛️ Political Catalysts</h2>
                 <div class="news-section">
-                    <div class="news-title">Key Political Factors Impacting Markets</div>
                     {political_html}
                 </div>
             </div>
             
             <div class="section">
-                <h2 class="section-title">🏭 Industry & Sector Developments</h2>
+                <h2 class="section-title">🏭 Sector Outlook</h2>
                 <div class="news-section">
-                    <div class="news-title">Sector-Specific News and Analysis</div>
                     {industry_html}
                 </div>
             </div>
             
             <div class="section">
-                <h2 class="section-title">📊 Market Visualization</h2>
-                <p><em>Detailed performance charts attached for visual analysis</em></p>
-            </div>
-            
-            <div class="section">
                 <h2 class="section-title">🤖 Integrated Market Intelligence</h2>
                 <div class="analysis-box">
-                    {ai_analysis.replace(chr(10), '<br>')}
+                    {analysis_html}
                 </div>
             </div>
         </div>
         
         <div class="footer">
-            <p>Comprehensive market intelligence report with political and industry context • Data sources: Simulated market-moving events</p>
-            <p>Prepared by: {from_name} • {current_date}</p>
-            <p><em>This analysis integrates political, industry, and market factors for comprehensive insights.</em></p>
+            <p>This report combines real-time market data with political and industry analysis for comprehensive insights.</p>
+            <p>Prepared by: {from_name} • {current_date} • Data Sources: Market Data & Simulated Catalysts</p>
         </div>
     </div>
 </body>
@@ -479,7 +480,7 @@ def send_email(html_content, chart_image, to_email, from_name):
         return False
     
     msg = MIMEMultipart()
-    msg['Subject'] = f"Market Intelligence with Political & Industry News - {datetime.now().strftime('%m/%d/%Y')}"
+    msg['Subject'] = f"Market Intelligence Report - {datetime.now().strftime('%m/%d/%Y')}"
     msg['From'] = f"{from_name} <{smtp_user}>"
     msg['To'] = to_email
     
@@ -505,7 +506,7 @@ def send_email(html_content, chart_image, to_email, from_name):
 
 def main():
     """Main function to generate and send the market report"""
-    print("🚀 Generating Comprehensive Market Intelligence Report...")
+    print("🚀 Generating Clean Market Intelligence Report...")
     
     # Validate environment variables
     required_vars = ['EMAIL_TO', 'FROM_NAME', 'SMTP_USER', 'SMTP_PASSWORD']
@@ -532,11 +533,11 @@ def main():
     # Create visualization
     chart_image = create_stock_chart(stock_data)
     
-    # Generate comprehensive analysis including news context
-    ai_analysis = generate_enhanced_analysis(stock_data, political_news, industry_news)
+    # Generate clean analysis
+    ai_analysis = generate_clean_analysis(stock_data, political_news, industry_news)
     
     # Create email content
-    from_name = os.getenv('FROM_NAME', 'Market Intelligence System')
+    from_name = os.getenv('FROM_NAME', 'Market Intelligence')
     html_content = create_email_html(stock_data, ai_analysis, political_news, industry_news, from_name)
     
     # Send email
@@ -544,7 +545,7 @@ def main():
     success = send_email(html_content, chart_image, email_to, from_name)
     
     if success:
-        print("🎉 Comprehensive market intelligence report with news context sent successfully!")
+        print("🎉 Clean market intelligence report sent successfully!")
     else:
         print("💥 Failed to send market report")
 
