@@ -31,4 +31,4 @@ jobs:
         SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
         SMTP_USER: ${{ secrets.SMTP_USER }}
       run: |
-        python market_report.py
+        python weekly_stock_report.py  # ← Changed to match your actual filename
