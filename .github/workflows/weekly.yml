@@ -4,7 +4,7 @@ on:
   schedule:
     # Tuesday 6:30am AEST = Monday 19:30 UTC
     - cron: '30 19 * * 1'
-  workflow_dispatch:  # allows manual runs from the Actions tab
+  workflow_dispatch:
 
 jobs:
   run-report:
@@ -13,6 +13,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -20,7 +22,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: pip install --upgrade --force-reinstall -r requirements.txt
 
       - name: Run weekly report
         env:
@@ -28,4 +30,15 @@ jobs:
           SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
           EMAIL_TO: ${{ secrets.EMAIL_TO }}
           FROM_NAME: ${{ secrets.FROM_NAME }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: python weekly_stock_report.py
+
+      - name: Commit and push report
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add reports/
+          git commit -m "Add weekly report $(date +'%Y-%m-%d')" || echo "No changes to commit"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
