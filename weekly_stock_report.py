@@ -30,7 +30,7 @@ def call_gemini(prompt: str) -> str:
 
     payload = {
         "contents": [{"parts": [{"text": prompt}]}],
-        "generationConfig": {"temperature": 0.4, "maxOutputTokens": 1200},
+        "generationConfig": {"temperature": 0.4, "maxOutputTokens": 2048},
     }
     resp = requests.post(
         f"{GEMINI_API_URL}?key={api_key}",
