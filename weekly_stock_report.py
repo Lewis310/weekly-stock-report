@@ -170,17 +170,26 @@ Return ONLY valid JSON (no markdown fences) with this exact structure:
 
     raw = call_gemini(prompt)
 
-    # Strip any accidental markdown fences
+    # Strip markdown fences
     raw = raw.strip()
-    if raw.startswith("```"):
-        raw = raw.split("```")[1]
-        if raw.startswith("json"):
-            raw = raw[4:]
-    raw = raw.strip().rstrip("```").strip()
+    if "```" in raw:
+        parts = raw.split("```")
+        for part in parts:
+            part = part.strip()
+            if part.startswith("json"):
+                part = part[4:].strip()
+            if part.startswith("{"):
+                raw = part
+                break
+
+    # Find the JSON object
+    start = raw.find("{")
+    end = raw.rfind("}") + 1
+    if start == -1 or end == 0:
+        raise RuntimeError(f"No JSON found in Gemini response: {raw}")
+    raw = raw[start:end]
 
     return json.loads(raw)
-
-
 # ── Chart ─────────────────────────────────────────────────────────────────────
 
 def create_chart(stock_data: dict, sector_data: dict) -> io.BytesIO:
